@@ -1,0 +1,78 @@
+﻿@page "/productos"
+@rendermode InteractiveServer
+@inject NavigationManager _navigator;
+@inject IRepositorioProductos _repositorio;
+<h3>Productos</h3>
+<a class="btn btn-success" href="productos/nuevo">Agregar producto</a>
+
+@if (_productos == null)
+{
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+}
+else if (_productos.Count == 0)
+{
+    <p>No hay productos registrados.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Producto producto in _productos)
+            {
+                <tr>
+                    <td>@producto.Nombre</td>
+                    <td>@producto.CategoriaP?.Nombre</td> <!-- Mostrar el nombre de la categoría -->
+                    <td>@producto.Precio</td>
+                    <td>@producto.Stock</td>
+                    <td>
+                        <button class="btn btn-sm" title="Modificar" @onclick="() => Modificar(producto.Id)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.111L4 14.5V12.5l.111-.111 10-10z" />
+                                <path fill-rule="evenodd" d="M11.207 2.5L13.5 4.793 5.207 13H3v-2.207l8.207-8.207z" />
+                                <path fill-rule="evenodd" d="M4.5 13.5V14h.5l.5-.5H4.5z" />
+                            </svg>
+                        </button>
+                        <button class="btn btn-sm" title="Eliminar" @onclick="() => Eliminar(producto)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                <path d="M5.5 5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-1 0zM8 5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-1 0zM10.5 5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-1 0z" />
+                                <path fill-rule="evenodd" d="M14.5 3H11V1.5a1.5 1.5 0 0 0-3 0V3H1.5a.5.5 0 0 0 0 1H2v11.5A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5V4h.5a.5.5 0 0 0 0-1zm-3-1.5a.5.5 0 0 1 1 0V3H7V1.5a.5.5 0 0 1 1 0V3h4z" />
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Producto>? _productos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _productos = await _repositorio.GetAll();
+    }
+
+    private async void Eliminar(Producto producto)
+    {
+        await _repositorio.Delete(producto.Id);
+        _productos!.Remove(producto);
+        StateHasChanged();
+    }
+
+    private void Modificar(int id)
+    {
+        _navigator.NavigateTo($"/productos/editar/{id}");
+    }
+}

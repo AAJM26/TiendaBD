@@ -1,0 +1,71 @@
+﻿@page "/categorias/nuevo"
+@page "/categorias/editar/{Id:int}"
+
+@rendermode InteractiveServer
+
+@inject NavigationManager navigator
+@inject IRepositorioCategorias repositorio
+
+<h2>@_mensaje Categoria</h2>
+
+<EditForm Model="_categoria" FormName="frmCategoria" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <label for="txtNombre" class="col-2 col-form-label">Nombre</label>
+        <div class="col-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="_categoria.Nombre" />
+            <ValidationMessage For="() => _categoria.Nombre" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button class="btn btn-danger ms-3" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private string _mensaje = "";
+    private Categoria? _categoria = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id > 0)
+        {
+            _categoria = await repositorio.Get(Id);
+            _mensaje = "Modificar Categoria";
+        }
+        else
+        {
+            _mensaje = "Nueva Categoria";
+            _categoria = new Categoria();
+        }
+    }
+
+    // Método para guardar la categoría
+    private async void Guardar()
+    {
+        if (_categoria != null)  // Asegurarse de que la categoría no sea nula
+        {
+            if (_categoria.Id == 0)  // Si el Id es 0, significa que es una nueva categoría
+            {
+                await repositorio.Add(_categoria);  // Llamar al método Add para agregar una nueva categoría
+            }
+            else  // Si el Id es mayor que 0, significa que estamos editando una categoría existente
+            {
+                await repositorio.Update(Id, _categoria);  // Llamar al método Update para editar la categoría
+            }
+        }
+
+        Cancelar();  // Redirigir al listado de categorías
+    }
+
+    // Método para cancelar la operación y redirigir
+    private void Cancelar()
+    {
+        navigator.NavigateTo("/categorias");  // Navegar a la página principal de categorías
+    }
+}

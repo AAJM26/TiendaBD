@@ -1,0 +1,102 @@
+﻿@page "/productos/nuevo"
+@page "/productos/editar/{Id:int}"
+
+@rendermode InteractiveServer
+
+@inject NavigationManager navigator
+@inject IRepositorioProductos repositorio
+@inject IRepositorioCategorias repositorioCategoria
+
+<h2>@_mensaje Producto</h2>
+
+<EditForm Model="_producto" FormName="frmProducto" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <label for="txtNombre" class="col-2 col-form-label">Nombre</label>
+        <div class="col-10">
+            <InputText id="txtNombre" class="form-control" @bind-Value="_producto.Nombre" />
+            <ValidationMessage For="() => _producto.Nombre" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="ddlCategoria" class="col-2 col-form-label">Categoría</label>
+        <div class="col-10">
+            <InputSelect id="ddlCategoria" class="form-control" @bind-Value="_producto.CategoriaPId">
+                <option value="0">Seleccione una categoría</option>
+                @foreach (var categoria in _categorias)
+                {
+                    <option value="@categoria.Id">@categoria.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => _producto.CategoriaPId" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="txtPrecio" class="col-2 col-form-label">Precio</label>
+        <div class="col-10">
+            <InputNumber id="txtPrecio" class="form-control" @bind-Value="_producto.Precio" />
+            <ValidationMessage For="() => _producto.Precio" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <label for="txtStock" class="col-2 col-form-label">Stock</label>
+        <div class="col-10">
+            <InputNumber id="txtStock" class="form-control" @bind-Value="_producto.Stock" />
+            <ValidationMessage For="() => _producto.Stock" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <button class="btn btn-danger ms-3" @onclick="Cancelar">Cancelar</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private string _mensaje = "";
+    private Producto? _producto = new();
+    private List<Categoria> _categorias = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categorias = await repositorioCategoria.GetAll();
+
+        if (Id > 0)
+        {
+            _producto = await repositorio.Get(Id);
+            _mensaje = "Modificar Producto";
+        }
+        else
+        {
+            _mensaje = "Nuevo Producto";
+            _producto = new Producto();
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (_producto is not null)
+        {
+            if (_producto.Id == 0)
+            {
+                await repositorio.Add(_producto);
+            }
+            else
+            {
+                await repositorio.Update(Id, _producto);
+            }
+        }
+        Cancelar();
+    }
+
+    private void Cancelar()
+    {
+        navigator.NavigateTo("/productos");
+    }
+}
